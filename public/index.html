@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>[NOME] — Prospecção Industrial</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0d0f14;
+      --bg2:     #13161e;
+      --bg3:     #1a1e29;
+      --border:  #252836;
+      --accent:  #4f8ef7;
+      --accent2: #3a6fd8;
+      --text:    #e4e6f0;
+      --text2:   #8a8fa8;
+      --alta:    #ef4444;
+      --media:   #f59e0b;
+      --baixa:   #22c55e;
+      --radius:  10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .logo-icon {
+      width: 34px; height: 34px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .logo-sub {
+      font-size: .7rem;
+      color: var(--text2);
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .82rem;
+      color: var(--text2);
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--baixa);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ── Layout ── */
+    .wrapper {
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      flex: 1;
+    }
+
+    /* ── Painel de controle ── */
+    .panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .panel-label {
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--text2);
+      margin-bottom: 1rem;
+    }
+
+    .setores-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .setor-btn {
+      padding: .45rem 1rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text2);
+      font-size: .85rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .setor-btn:hover { border-color: var(--accent); color: var(--text); }
+    .setor-btn.ativo {
+      background: rgba(79,142,247,.15);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .actions { display: flex; gap: .75rem; flex-wrap: wrap; }
+
+    .btn-primary {
+      padding: .6rem 1.4rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-ghost {
+      padding: .6rem 1.2rem;
+      background: transparent;
+      color: var(--text2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: .85rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+
+    .btn-teste {
+      padding: .6rem 1.2rem;
+      background: transparent;
+      color: var(--media);
+      border: 1px solid var(--media);
+      border-radius: 7px;
+      font-size: .85rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .btn-teste:hover { background: rgba(245,158,11,.1); }
+    .btn-teste:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── Status bar ── */
+    .status-bar {
+      display: none;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .9rem 1.25rem;
+      margin-bottom: 1.25rem;
+      font-size: .88rem;
+      color: var(--text2);
+      align-items: center;
+      gap: .75rem;
+    }
+
+    .status-bar.visivel { display: flex; }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Resumo ── */
+    .resumo {
+      display: none;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .resumo.visivel { display: grid; }
+
+    .resumo-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+    }
+
+    .resumo-card .r-label {
+      font-size: .73rem;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: .35rem;
+    }
+
+    .resumo-card .r-valor {
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .r-total .r-valor { color: var(--accent); }
+    .r-alta  .r-valor { color: var(--alta); }
+    .r-media .r-valor { color: var(--media); }
+    .r-baixa .r-valor { color: var(--baixa); }
+
+    /* ── Filtros ── */
+    .filtros {
+      display: none;
+      gap: .5rem;
+      margin-bottom: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filtros.visivel { display: flex; }
+    .filtros span { font-size: .8rem; color: var(--text2); }
+
+    .filtro-btn {
+      padding: .3rem .85rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text2);
+      font-size: .78rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .filtro-btn.ativo, .filtro-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── Cards ── */
+    #resultados { display: flex; flex-direction: column; gap: 1rem; }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text2);
+    }
+
+    .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+
+    .card:hover { border-color: rgba(79,142,247,.35); }
+
+    .card-header {
+      padding: 1.1rem 1.25rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      cursor: pointer;
+    }
+
+    .card-empresa { font-size: 1rem; font-weight: 700; margin-bottom: .25rem; }
+
+    .card-meta {
+      font-size: .8rem;
+      color: var(--text2);
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .badge-setor {
+      background: rgba(79,142,247,.1);
+      color: var(--accent);
+      border: 1px solid rgba(79,142,247,.2);
+      padding: .2rem .65rem;
+      border-radius: 20px;
+      font-size: .72rem;
+    }
+
+    .badge {
+      padding: .25rem .75rem;
+      border-radius: 20px;
+      font-size: .75rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .badge.Alta  { background: rgba(239,68,68,.15); color: var(--alta); border: 1px solid rgba(239,68,68,.3); }
+    .badge.Media { background: rgba(245,158,11,.15); color: var(--media); border: 1px solid rgba(245,158,11,.3); }
+    .badge.Baixa { background: rgba(34,197,94,.15); color: var(--baixa); border: 1px solid rgba(34,197,94,.3); }
+
+    .chevron { font-size: .7rem; color: var(--text2); transition: transform .2s; margin-top: .3rem; }
+    .card.aberto .chevron { transform: rotate(180deg); }
+
+    .card-body {
+      display: none;
+      border-top: 1px solid var(--border);
+      padding: 1.25rem;
+    }
+
+    .card.aberto .card-body { display: block; }
+
+    .card-oportunidade {
+      font-size: .9rem;
+      color: var(--text2);
+      margin-bottom: 1.25rem;
+      line-height: 1.65;
+    }
+
+    .tabs { display: flex; gap: .5rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap; }
+
+    .tab {
+      padding: .35rem .9rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text2);
+      font-size: .8rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .tab.ativo {
+      background: rgba(79,142,247,.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.ativo { display: block; }
+
+    .msg-box {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 1rem;
+      font-size: .85rem;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .copy-btn {
+      margin-top: .75rem;
+      padding: .4rem .9rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text2);
+      font-size: .78rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .fonte-link {
+      font-size: .82rem;
+      color: var(--accent);
+      text-decoration: none;
+      margin-left: auto;
+    }
+
+    .fonte-link:hover { text-decoration: underline; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1rem 2rem;
+      text-align: center;
+      font-size: .78rem;
+      color: var(--text2);
+    }
+
+    @media (max-width: 640px) {
+      .resumo { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🎯</div>
+      <div>
+        <div>[NOME]</div>
+        <div class="logo-sub">Prospecção Industrial com IA</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="dot"></div>
+      <span>Agente ativo</span>
+    </div>
+  </header>
+
+  <div class="wrapper">
+
+    <!-- Painel de controle -->
+    <div class="panel">
+      <div class="panel-label">Setores-alvo</div>
+      <div class="setores-grid" id="setores-grid"></div>
+      <div class="actions">
+        <button class="btn-primary" id="btn-prospectar" onclick="iniciarProspeccao()">🔍 Prospectar agora</button>
+        <button class="btn-ghost" onclick="selecionarTodos()">Selecionar todos</button>
+        <button class="btn-ghost" onclick="limparSelecao()">Limpar</button>
+        <button class="btn-teste" id="btn-teste" onclick="testarEmail()">📧 Testar envio de email</button>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-bar" id="status-bar">
+      <div class="spinner"></div>
+      <span id="status-msg">Iniciando...</span>
+    </div>
+
+    <!-- Resumo -->
+    <div class="resumo" id="resumo">
+      <div class="resumo-card r-total"><div class="r-label">Total</div><div class="r-valor" id="r-total">0</div></div>
+      <div class="resumo-card r-alta"><div class="r-label">🔴 Alta</div><div class="r-valor" id="r-alta">0</div></div>
+      <div class="resumo-card r-media"><div class="r-label">🟡 Média</div><div class="r-valor" id="r-media">0</div></div>
+      <div class="resumo-card r-baixa"><div class="r-label">🟢 Baixa</div><div class="r-valor" id="r-baixa">0</div></div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros" id="filtros">
+      <span>Filtrar:</span>
+      <button class="filtro-btn ativo" onclick="filtrar('todos', this)">Todos</button>
+      <button class="filtro-btn" onclick="filtrar('Alta', this)">🔴 Alta</button>
+      <button class="filtro-btn" onclick="filtrar('Media', this)">🟡 Média</button>
+      <button class="filtro-btn" onclick="filtrar('Baixa', this)">🟢 Baixa</button>
+    </div>
+
+    <!-- Resultados -->
+    <div id="resultados">
+      <div class="empty-state">
+        <div class="icon">🎯</div>
+        <p>Selecione os setores e clique em <strong>Prospectar agora</strong><br>para encontrar oportunidades reais.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>[NOME] © 2025 — Prospecção Industrial com Inteligência Artificial</footer>
+
+  <script>
+    const SETORES = ['Papel e Celulose','Mineração','Petroquímica','Alimentos e Bebidas','Sucroenergético'];
+    let selecionados = new Set();
+    let oportunidades = [];
+    let filtroAtual = 'todos';
+
+    function renderSetores() {
+      const grid = document.getElementById('setores-grid');
+      grid.innerHTML = '';
+      SETORES.forEach(s => {
+        const btn = document.createElement('button');
+        btn.className = 'setor-btn' + (selecionados.has(s) ? ' ativo' : '');
+        btn.textContent = s;
+        btn.onclick = () => {
+          selecionados.has(s) ? selecionados.delete(s) : selecionados.add(s);
+          btn.classList.toggle('ativo');
+        };
+        grid.appendChild(btn);
+      });
+    }
+
+    function selecionarTodos() { SETORES.forEach(s => selecionados.add(s)); renderSetores(); }
+    function limparSelecao()   { selecionados.clear(); renderSetores(); }
+
+    async function iniciarProspeccao() {
+      if (!selecionados.size) { alert('Selecione pelo menos um setor.'); return; }
+      oportunidades = [];
+      filtroAtual = 'todos';
+      document.getElementById('resultados').innerHTML = '';
+      document.getElementById('resumo').classList.remove('visivel');
+      document.getElementById('filtros').classList.remove('visivel');
+      document.getElementById('btn-prospectar').disabled = true;
+      setStatus('Conectando ao agente de busca...');
+
+      try {
+        const res = await fetch('/api/prospectar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ setores: [...selecionados] }),
+        });
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split('\n');
+          buf = lines.pop();
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            try { processarEvento(JSON.parse(line.slice(6))); } catch {}
+          }
+        }
+      } catch (err) {
+        setStatus('❌ Erro: ' + err.message);
+      } finally {
+        document.getElementById('btn-prospectar').disabled = false;
+        setTimeout(() => document.getElementById('status-bar').classList.remove('visivel'), 3000);
+      }
+    }
+
+    function processarEvento(obj) {
+      if (obj.tipo === 'status') {
+        setStatus(obj.msg);
+      } else if (obj.tipo === 'oportunidade') {
+        oportunidades.push(obj.data);
+        renderCards();
+        atualizarResumo();
+      } else if (obj.tipo === 'concluido') {
+        setStatus(`✅ Concluído — ${obj.total} oportunidades encontradas`);
+        if (oportunidades.length) document.getElementById('filtros').classList.add('visivel');
+        else document.getElementById('resultados').innerHTML = `
+          <div class="empty-state"><div class="icon">🔎</div>
+          <p>Nenhuma oportunidade encontrada.<br>Tente outros setores.</p></div>`;
+      }
+    }
+
+    function setStatus(msg) {
+      const bar = document.getElementById('status-bar');
+      bar.classList.add('visivel');
+      document.getElementById('status-msg').textContent = msg;
+    }
+
+    function renderCards() {
+      const lista = filtroAtual === 'todos' ? oportunidades : oportunidades.filter(o => o.urgencia === filtroAtual);
+      document.getElementById('resultados').innerHTML = '';
+      lista.forEach((op, i) => document.getElementById('resultados').appendChild(criarCard(op, i)));
+    }
+
+    function criarCard(op, i) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-header" onclick="this.parentElement.classList.toggle('aberto')">
+          <div>
+            <div class="card-empresa">${op.empresa}</div>
+            <div class="card-meta">
+              <span>📍 ${op.local || '—'}</span>
+              <span>👤 ${op.contato_ideal || '—'}</span>
+              <span class="badge-setor">${op.setor}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-shrink:0">
+            <span class="badge ${op.urgencia}">${op.urgencia === 'Alta' ? '🔴' : op.urgencia === 'Media' ? '🟡' : '🟢'} ${op.urgencia}</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-oportunidade">${op.oportunidade}</p>
+          <div class="tabs">
+            <button class="tab ativo" onclick="mudarTab(this,'e${i}')">📧 Email</button>
+            <button class="tab" onclick="mudarTab(this,'l${i}')">💼 LinkedIn</button>
+            ${op.fonte ? `<a class="fonte-link" href="${op.fonte}" target="_blank">🔗 Ver notícia</a>` : ''}
+          </div>
+          <div id="e${i}" class="tab-content ativo">
+            <div class="msg-box">${op.email_prospeccao || '—'}</div>
+            <button class="copy-btn" onclick="copiar('e${i}')">📋 Copiar email</button>
+          </div>
+          <div id="l${i}" class="tab-content">
+            <div class="msg-box">${op.linkedin_msg || '—'}</div>
+            <button class="copy-btn" onclick="copiar('l${i}')">📋 Copiar mensagem</button>
+          </div>
+        </div>`;
+      return card;
+    }
+
+    function mudarTab(btn, id) {
+      const body = btn.closest('.card-body');
+      body.querySelectorAll('.tab').forEach(t => t.classList.remove('ativo'));
+      body.querySelectorAll('.tab-content').forEach(t => t.classList.remove('ativo'));
+      btn.classList.add('ativo');
+      document.getElementById(id).classList.add('ativo');
+    }
+
+    function copiar(id) {
+      navigator.clipboard.writeText(document.getElementById(id).querySelector('.msg-box').textContent)
+        .then(() => alert('✅ Copiado!'));
+    }
+
+    function atualizarResumo() {
+      document.getElementById('resumo').classList.add('visivel');
+      document.getElementById('r-total').textContent = oportunidades.length;
+      document.getElementById('r-alta').textContent  = oportunidades.filter(o => o.urgencia === 'Alta').length;
+      document.getElementById('r-media').textContent = oportunidades.filter(o => o.urgencia === 'Media').length;
+      document.getElementById('r-baixa').textContent = oportunidades.filter(o => o.urgencia === 'Baixa').length;
+    }
+
+    function filtrar(u, btn) {
+      filtroAtual = u;
+      document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('ativo'));
+      btn.classList.add('ativo');
+      renderCards();
+    }
+
+    async function testarEmail() {
+      const btn = document.getElementById('btn-teste');
+      btn.disabled = true;
+      btn.textContent = '⏳ Enviando...';
+      setStatus('Disparando email de teste — isso leva 1-2 minutos...');
+
+      try {
+        const res = await fetch('/api/testar-email', { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          setStatus('✅ ' + data.msg);
+          alert('✅ Email enviado! Verifique sua caixa de entrada.');
+        } else {
+          setStatus('❌ Erro: ' + data.msg);
+        }
+      } catch (err) {
+        setStatus('❌ Erro na conexão: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '📧 Testar envio de email';
+      }
+    }
+
+    renderSetores();
+  </script>
+</body>
+</html>
