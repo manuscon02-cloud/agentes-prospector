@@ -133,7 +133,7 @@ app.post('/api/testar-email', async (req, res) => {
 app.get('/status', (req, res) => {
   const exec = getUltimaExecucao();
   res.json({
-    servico: '[NOME] — Prospecção Industrial com IA',
+    servico: 'Vox Prospector — TWA Equipamentos e Serviços Industriais',
     timestamp: new Date().toISOString(),
     agentes: {
       prospeccao: {
@@ -147,6 +147,6 @@ app.get('/status', (req, res) => {
 // ── Inicia servidor ───────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 [NOME] rodando na porta ${PORT}`);
+  console.log(`🚀 Vox Prospector (TWA) rodando na porta ${PORT}`);
   iniciarCrons();
 });

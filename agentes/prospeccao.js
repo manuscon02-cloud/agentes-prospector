@@ -1,7 +1,6 @@
 // ============================================================
-//  AGENTE DE PROSPECÇÃO — v2.0
-//  Busca REAL via Tavily API → Análise via GPT-4o → Email
-//  Quando tiver nome da agência: Ctrl+H e substituir [NOME]
+//  VOX PROSPECTOR — TWA Equipamentos e Serviços Industriais
+//  Busca REAL via Tavily (2 fontes) → GPT-4o → Email
 // ============================================================
 
 import OpenAI from 'openai';
@@ -11,46 +10,37 @@ import { enviarEmail } from '../email.js';
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
 
-// ── Setores-alvo ─────────────────────────────────────────────
 const SETORES = [
   {
     nome: 'Papel e Celulose',
     queries: [
-      'expansão planta celulose Brasil 2025 2026',
-      'nova fábrica papel celulose obra industrial Brasil',
-    ],
-  },
-  {
-    nome: 'Mineração',
-    queries: [
-      'expansão mineração Brasil 2025 nova planta obra',
-      'mineradora ampliação instalações industriais Brasil',
-    ],
-  },
-  {
-    nome: 'Petroquímica',
-    queries: [
-      'expansão petroquímica Brasil 2025 2026 obra industrial',
-      'refinaria ampliação nova unidade petroquímica Brasil',
-    ],
-  },
-  {
-    nome: 'Alimentos e Bebidas',
-    queries: [
-      'nova fábrica alimentos bebidas Brasil 2025 obra expansão',
-      'frigorífico indústria alimentícia ampliação planta Brasil',
+      'Klabin Suzano Bracell expansão nova planta obra 2026 2027',
+      'indústria papel celulose investimento ampliação Brasil 2026',
     ],
   },
   {
     nome: 'Sucroenergético',
     queries: [
-      'usina açúcar etanol expansão obra 2025 2026 Brasil',
-      'sucroenergético ampliação nova planta investimento Brasil',
+      'Raízen São Martinho Tereos expansão usina obra 2026 2027',
+      'usina açúcar etanol ampliação nova planta investimento Brasil 2026',
+    ],
+  },
+  {
+    nome: 'Mineração',
+    queries: [
+      'Vale Kinross CSN mineração expansão obra industrial Brasil 2026 2027',
+      'mineradora ampliação instalações nova planta Brasil 2026',
+    ],
+  },
+  {
+    nome: 'Alimentos e Bebidas',
+    queries: [
+      'Nestlé ADM BRF JBS nova fábrica expansão obra Brasil 2026 2027',
+      'indústria alimentos bebidas ampliação planta industrial Brasil 2026',
     ],
   },
 ];
 
-// ── Busca REAL via Tavily ─────────────────────────────────────
 async function buscarNoticias(queries) {
   const resultados = [];
 
@@ -68,6 +58,7 @@ async function buscarNoticias(queries) {
             titulo: item.title || '',
             url: item.url,
             conteudo: item.content.slice(0, 600),
+            publishedDate: item.publishedDate || '',
           });
         }
       }
@@ -76,7 +67,6 @@ async function buscarNoticias(queries) {
     }
   }
 
-  // Remove URLs duplicadas
   const vistos = new Set();
   return resultados.filter((r) => {
     if (vistos.has(r.url)) return false;
@@ -85,12 +75,11 @@ async function buscarNoticias(queries) {
   });
 }
 
-// ── GPT-4o analisa notícias reais e monta oportunidades ──────
 async function analisarOportunidades(setor, noticias) {
   if (!noticias.length) return [];
 
   const noticiasFmt = noticias
-    .map((n, i) => `[${i + 1}] ${n.titulo}\nURL: ${n.url}\n${n.conteudo}`)
+    .map((n, i) => `[${i + 1}] ${n.titulo}\nDATA: ${n.publishedDate || 'não informada'}\nURL: ${n.url}\n${n.conteudo}`)
     .join('\n\n---\n\n');
 
   const completion = await openai.chat.completions.create({
@@ -98,35 +87,43 @@ async function analisarOportunidades(setor, noticias) {
     messages: [
       {
         role: 'system',
-        content: `Você é um agente de prospecção B2B especializado em serviços industriais.
-A empresa que você representa atua em: caldeiraria industrial, montagem eletromecânica, manutenção industrial, tubulação e estruturas metálicas. Atende todo o Brasil.
+        content: `Você é o Vox Prospector, agente de prospecção B2B de elite da TWA Equipamentos e Serviços Industriais (Sertãozinho/SP).
+
+A TWA atua em: caldeiraria industrial, montagem e desmontagem eletromecânica, manutenção industrial, tubulação, estruturas metálicas, soldagem especializada, mandrilhamento de tubos e locação de guindastes.
+Diferenciais: equipe de engenharia própria, conformidade com NRs 6, 10, 11, 12, 31, 33 e 35.
+Contexto: estamos em 2026. Ignore oportunidades encerradas ou de 2025. Foque em projetos ativos ou planejados para 2026/2027.
 Retorne APENAS um array JSON válido. Sem texto antes ou depois.`,
       },
       {
         role: 'user',
-        content: `Com base APENAS nas notícias reais abaixo do setor "${setor}", identifique oportunidades concretas de prospecção B2B.
+        content: `Analise as notícias reais abaixo do setor "${setor}" e identifique oportunidades concretas de prospecção para a TWA.
 
-NOTÍCIAS REAIS:
+REGRAS:
+- Só inclua oportunidades com pelo menos 2 fontes confirmando ou com fonte confiável e data recente (2025/2026)
+- Descarte notícias vagas, sem empresa identificada ou anteriores a 2025
+- O email deve ser assinado por William Costa, Gerente Comercial TWA
+- Tom: profissional, técnico, direto ao ponto — destinatário é Diretor ou Gerente de Projetos
+
+NOTÍCIAS:
 ${noticiasFmt}
 
-Retorne um array JSON. Para cada oportunidade real encontrada:
+Retorne array JSON:
 [
   {
-    "empresa": "Nome exato da empresa citada",
+    "empresa": "Nome exato da empresa",
     "local": "Cidade, Estado",
-    "oportunidade": "Descrição objetiva do projeto citado na notícia",
+    "oportunidade": "Descrição objetiva do projeto citado",
     "urgencia": "Alta | Media | Baixa",
-    "contato_ideal": "Cargo ideal para contatar",
-    "fonte": "URL exata da notícia",
-    "email_prospeccao": "Email frio profissional de até 120 palavras",
-    "linkedin_msg": "Mensagem LinkedIn de até 50 palavras"
+    "contato_ideal": "Cargo ideal (ex: Gerente de Projetos, Diretor Industrial)",
+    "fonte": "URL da notícia principal",
+    "assunto_email": "Assunto impactante mencionando empresa e projeto",
+    "email_prospeccao": "Email frio completo até 150 palavras, assinado por William Costa / Gerente Comercial TWA / (16) 9XXXX-XXXX / comercial@twaequipamentos.com.br",
+    "linkedin_msg": "Mensagem LinkedIn até 50 palavras"
   }
-]
-
-IMPORTANTE: Só inclua oportunidades que estejam EXPLICITAMENTE nas notícias. Não invente dados.`,
+]`,
       },
     ],
-    max_tokens: 3000,
+    max_tokens: 3500,
   });
 
   try {
@@ -140,9 +137,8 @@ IMPORTANTE: Só inclua oportunidades que estejam EXPLICITAMENTE nas notícias. N
   }
 }
 
-// ── Função principal exportada ────────────────────────────────
 export async function rodarProspeccao() {
-  console.log('🔍 [Prospecção v2] Buscando oportunidades reais...');
+  console.log('🔍 [Vox Prospector] Buscando oportunidades reais 2026/2027...');
 
   const todasOportunidades = [];
 
@@ -165,7 +161,6 @@ export async function rodarProspeccao() {
     return;
   }
 
-  // ── Monta email de relatório ──────────────────────────────
   const hoje = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric',
   });
@@ -174,9 +169,9 @@ export async function rodarProspeccao() {
   const medias = todasOportunidades.filter((o) => o.urgencia === 'Media').length;
   const baixas = todasOportunidades.filter((o) => o.urgencia === 'Baixa').length;
 
-  let corpo = `PROSPECÇÃO SEMANAL — [NOME]\n`;
+  let corpo = `VOX PROSPECTOR — TWA Equipamentos e Serviços Industriais\n`;
   corpo += `Data: ${hoje}\n`;
-  corpo += `Total: ${todasOportunidades.length} oportunidades reais\n`;
+  corpo += `Total: ${todasOportunidades.length} oportunidades reais (2026/2027)\n`;
   corpo += `🔴 Alta: ${altas} | 🟡 Média: ${medias} | 🟢 Baixa: ${baixas}\n\n`;
 
   for (const setor of SETORES) {
@@ -189,8 +184,9 @@ export async function rodarProspeccao() {
       const icon = op.urgencia === 'Alta' ? '🔴' : op.urgencia === 'Media' ? '🟡' : '🟢';
       corpo += `${icon} ${op.empresa} — ${op.local}\n`;
       corpo += `Oportunidade: ${op.oportunidade}\n`;
-      corpo += `Contato: ${op.contato_ideal}\n`;
+      corpo += `Contato ideal: ${op.contato_ideal}\n`;
       corpo += `Fonte: ${op.fonte}\n\n`;
+      corpo += `ASSUNTO: ${op.assunto_email || ''}\n\n`;
       corpo += `EMAIL:\n${op.email_prospeccao}\n\n`;
       corpo += `LINKEDIN:\n${op.linkedin_msg}\n`;
       corpo += `─────────────────\n\n`;
@@ -198,7 +194,7 @@ export async function rodarProspeccao() {
   }
 
   await enviarEmail({
-    assunto: `[NOME] — Prospecção: ${todasOportunidades.length} oportunidades (${hoje})`,
+    assunto: `Vox Prospector — ${todasOportunidades.length} oportunidades TWA (${hoje})`,
     corpo,
   });
 
